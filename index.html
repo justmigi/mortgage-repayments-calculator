@@ -1,0 +1,162 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mortgage Repayments Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <!--Here I'm usind Tailwind CSS with the CDN script to access its utility classes faster-->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<!--Setting padding and making the webpage responsive in large, medium and small screens-->
+<body class="p-5 sm:p-10 md:p-20"> 
+
+    <!--I'm using this as a header/title for the webpage with the special font class, imported and styled with CSS as well as enabling flexbox and changing the text color with the available Tailwind CSS palette-->
+    <div class="special-font text-2xl sm:text-3xl md:text-4xl text-teal-700 flex justify-center pb-10 sm:pb-15 md:pb-20">
+        <h1>Mortgage Repayments Calculator</h1>
+    </div>
+
+    <!--I'm using this a subtitle of the header, with the special font also-->
+    <div class="special-font text-xl text-teal-600">
+        <h2>Discover How Much You'll Need To Pay Each Month For Your Mortgage</h2>
+    </div>
+
+    <!--Short description of what the webpage does-->
+    <div class="pt-5 text-sm sm:text-base">
+        <p>Mortgages make home ownership financially possible, but they are a significant long-term commitment. If you're considering to apply for one, this calculator will help you estimate your monthly repayments based on the information you provide below.</p>
+    </div> 
+
+    <div>
+        <!--Prompting the user do fill in the following fields-->
+        <div class="flex justify-center pt-20 pb-2">
+            <h2>Please complete the following:</h2>
+        </div>
+
+        <div class="flex flex-col items-center sm:grid sm:grid-flow-col sm:auto-cols-max sm:justify-center">
+
+            <!--Field 1 - here the user can enter the amount they want to borrow in €, there's no place for nonvalid arguments since the input type is number and field is required to be entered for the final calculation-->
+            <div class="p-2 sm:p-5 w-full max-w-xs">
+                <div>
+                    <label for="amount">Amount you wish to borrow?</label>
+                </div>
+                <div class="border-2 border-teal-500 rounded-md p-2 w-65 shadow-xl flex items-center">
+                    <span class="mr-2">€</span>
+                    <input type="number" id="amount" name="amount" placeholder="Enter amount" required class="border-none bg-transparent focus:outline-none">
+                </div>
+            </div>
+
+            <!--Field 2 - here the user can enter the payment period in years with the help of a dropdown menu option of 1 to 40 years. There's no place for nonvalid arguments since the option should be chosen from the menu for the final calculation-->
+            <div class="p-2 sm:p-5 w-full max-w-xs">
+                <div>
+                    <label for="years">Repayment period in years?</label>
+                </div>
+                <div class="border-2 border-teal-500 rounded-md p-2 w-65 shadow-xl">
+                    <select id="years" name="years" required class="border-none bg-transparent focus:outline-none w-full text-gray-400">
+                        <option value="" disabled selected>Select years</option> <!--Prompting the user to select an option. The empty value is used as a placeholder and the disabled attribute is set so the user cannot choose the placeholder, but they can choose numbers from 1 to 40-->
+                    </select>
+                </div>
+            </div>
+
+            <!--Field 3 - here the user can enter the interest rate in %, there's no place for nonvalid arguments since the input type is number and field is required to be entered for the final calculation-->
+            <div class="p-2 sm:p-5 w-full max-w-xs">
+                <div>
+                    <label for="interest">Interest rate?</label>
+                </div>
+                <div class="border-2 border-teal-500 rounded-md p-2 w-65 shadow-xl flex items-center">
+                    <input type="number" id="interest" name="interest" placeholder="Enter interest rate" required class="border-none bg-transparent focus:outline-none">
+                    <span>%</span>
+                </div>
+            </div>
+        </div>
+
+        <!--The Calculate button with a hover effect upon clicking and similar styling to the above fields-->
+        <div class="flex justify-center mt-5 sm:mt-10">
+            <button type="button" id="calculateButton" class="border-2 rounded-md bg-teal-700 text-white hover:bg-teal-500 shadow-xl p-2 w-40 mx-auto">Calculate</button>
+        </div>
+
+        <!--The results section which will display: Monthly Repayments & the Total Cost-->
+        <div id="result" class="text-center mt-5 text-teal-700 sm:text-2xl"></div>
+        <div id="totalCost" class="text-center mt-2 text-teal-700 sm:text-2xl"></div>
+    </div>
+
+    <!--Informing the user that these calculations are just a guide-->
+    <div>
+        <p class="pt-5 w-full max-w-xs mx-auto text-teal-500 text-center text-xs">These calculations are intended as a general guide only.</p>
+    </div>
+
+
+    <!--Using JavaScript to aid the necessary calculations-->
+    <script>
+    
+        //Making the dropdown menu with the help of a for loop with options from 1 to 40 years for Field 2 
+        const yearOptions = document.getElementById('years');
+        for (let i = 1; i <= 40; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            yearOptions.appendChild(option);
+        }
+
+        //Making sure the Field 2 "placeholder" matches the two other field's style as well as changes to black when an option is selected
+        const selectYears = document.getElementById('years');
+        selectYears.addEventListener('change', function() {
+            if (this.value === "") {
+                //if the value is empty then the placeholder is selected
+                this.classList.add('text-gray-400');
+                this.classList.remove('text-black');
+            } else {
+                //otherwise an option will be selected
+                this.classList.remove('text-gray-400');
+                this.classList.add('text-black');
+            }
+        });
+
+        //Formula for the calculation of the monthly mortgage payment:
+
+        // M = P * { [ (r / 12) * (1 + r / 12) ^ n ] / [ (1 + r / 12) ^ n - 1 ] }
+        // where:
+        // M - is the monthly mortgage payment
+        // P - is the starting balance (principal)
+        // r - is the annual interest rate (in decimal)
+        // n - is the total number of payments (n = years * 12)
+
+        //Getting references to the inputs and button to use them later
+        const amountInput = document.getElementById('amount');
+        const yearsInput = document.getElementById('years');
+        const interestInput = document.getElementById('interest');
+        const calculateButton = document.getElementById('calculateButton');
+        const resultDiv = document.getElementById('result');
+        const totalCostDiv = document.getElementById('totalCost');
+
+        //Adding an event listener to the calculate button
+        calculateButton.addEventListener('click', function() {
+            //Getting the values from inputs
+            const P = parseFloat(amountInput.value);
+            const t = parseInt(yearsInput.value);
+            const i = parseFloat(interestInput.value) / 100; //parsing into a floating point number as the interest rate i needs to be divided by 100.
+
+            //Calculating n and r
+            const n = t * 12;
+            const r = i / 12;
+
+            //Calculating M
+            const numerator = r * Math.pow(1 + r, n); //calculating the numerator with the help of Math.pow method to get the value of it to the power of n
+            const denominator = Math.pow(1 + r, n) - 1; //same goes here for the denominator (power of n only)
+            const M = P * (numerator / denominator);
+
+            //Calculating Total cost
+            const totalCost = M * n;
+
+            //Formatting M and Total cost to two decimal places with the help of the toFixed() method
+            const monthlyPayment = M.toFixed(2);
+            const totalCostFormatted = totalCost.toFixed(2);
+
+            //Displaying the results by updating the contents inside these div tags: result & totalCost
+            resultDiv.textContent = 'Monthly repayment amount: € ' + monthlyPayment;
+            totalCostDiv.textContent = 'Total cost over the mortgage term: € ' + totalCostFormatted;
+        });
+
+    </script>
+</body>
+</html>

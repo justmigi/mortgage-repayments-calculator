@@ -1,0 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Notable&display=swap'); /*imported font from Google Fonts*/
+
+.special-font{
+    font-family: "Notable";
+} /*I've used the font for this class which represents the header of the webpage*/
+
+/*This is the only CSS styling used in order to avoid Config files for specific fonts. For the rest of the styling I have used the Tailwind CSS framework directly in the HTML*/
